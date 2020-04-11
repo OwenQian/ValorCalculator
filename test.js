@@ -1,4 +1,4 @@
-import {PokerCard, determineHandRank, generateCombinations} from './calc.js';
+import {Deck, PokerCard, determineHandRank, generateCombinations, calcValorVsHand} from './calc.js';
 
 export function testDetermineHandRank() {
     // straight flush
@@ -267,4 +267,84 @@ export function testPairCheck() {
     console.log("no pair", pairCheck(combo));
 }
 
-testDetermineHandRank();
+function testDeckConstructor() {
+    let excludedCards = [
+        new PokerCard(PokerCard.cardMap["A"], "d"),
+        new PokerCard(PokerCard.cardMap["A"], "d"),
+        new PokerCard(PokerCard.cardMap["K"], "d"),
+        new PokerCard(PokerCard.cardMap["Q"], "s"),
+        new PokerCard(PokerCard.cardMap["Q"], "h"),
+        new PokerCard(PokerCard.cardMap["Q"], "c"),
+        new PokerCard(PokerCard.cardMap["Q"], "d"),
+    ];
+    let deck = new Deck(excludedCards);
+    console.log(deck.deck);
+}
+
+function testShuffle() {
+    let deck = new Deck();
+    deck.shuffle();
+    console.log(deck.deck);
+}
+
+function testDrawCard() {
+    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["A"], "s")];
+    let vhand = [new PokerCard(PokerCard.cardMap["K"], "d"), new PokerCard(PokerCard.cardMap["K"], "s")];
+    let board = [
+        new PokerCard(PokerCard.cardMap["T"], "c") ,
+        new PokerCard(PokerCard.cardMap["9"], "c") ,
+        new PokerCard(PokerCard.cardMap["8"], "c") ,
+        new PokerCard(PokerCard.cardMap["7"], "c"),
+        new PokerCard(PokerCard.cardMap["6"], "c") ,
+        new PokerCard(PokerCard.cardMap["5"], "c") ,
+        new PokerCard(PokerCard.cardMap["4"], "c") ,
+        new PokerCard(PokerCard.cardMap["3"], "c") ,
+        new PokerCard(PokerCard.cardMap["2"], "c") ,
+        new PokerCard(PokerCard.cardMap["T"], "s") ,
+        new PokerCard(PokerCard.cardMap["9"], "s") ,
+        new PokerCard(PokerCard.cardMap["8"], "s") ,
+        new PokerCard(PokerCard.cardMap["7"], "s") ,
+        new PokerCard(PokerCard.cardMap["6"], "s") ,
+        new PokerCard(PokerCard.cardMap["5"], "s") ,
+        new PokerCard(PokerCard.cardMap["4"], "s") ,
+        new PokerCard(PokerCard.cardMap["3"], "s") ,
+        new PokerCard(PokerCard.cardMap["2"], "s"),
+        new PokerCard(PokerCard.cardMap["T"], "h") ,
+        new PokerCard(PokerCard.cardMap["9"], "h") ,
+        new PokerCard(PokerCard.cardMap["8"], "h") ,
+        new PokerCard(PokerCard.cardMap["7"], "h") ,
+        new PokerCard(PokerCard.cardMap["6"], "h") ,
+        new PokerCard(PokerCard.cardMap["5"], "h") ,
+        new PokerCard(PokerCard.cardMap["4"], "h") ,
+        new PokerCard(PokerCard.cardMap["3"], "h") ,
+        new PokerCard(PokerCard.cardMap["2"], "h")
+    ];
+    let deck = new Deck([hand, vhand, board].flat());
+    console.log(deck.deck.length);
+    let tally = {};
+    let numTrials = 100000;
+    for (let i = 0; i < numTrials; i++) {
+        deck.shuffle();
+        let c = deck.drawCardWithReplacement();
+        if (!(c.toString() in tally)) {
+            tally[c.toString()] = 1;
+        } else {
+            tally[c.toString()] += 1;
+        }
+    }
+    Object.keys(tally).forEach(k => {
+        console.log(k, "appeared", tally[k]/numTrials);
+    });
+}
+
+function testCalcValorVsHand() {
+    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];
+    let vhand = [new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")];
+    let board = [
+        new PokerCard(PokerCard.cardMap["2"], "d"),
+        new PokerCard(PokerCard.cardMap["7"], "d"),
+        new PokerCard(PokerCard.cardMap["T"], "c")
+    ];
+    console.log(calcValorVsHand(hand, vhand, board));
+}
+testCalcValorVsHand();

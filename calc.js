@@ -23,6 +23,20 @@ export class PokerCard {
         "2": 2,
     }
 
+    static suitMap = {
+        'd': 0,
+        'c': 1,
+        's': 2,
+        'h': 3
+    }
+
+    static reverseSuitMap = {
+        0:'d',
+        1:'c',
+        2:'s',
+        3:'h'
+    }
+
     static reverseCardMap = {
         14: "A",
         13: "K",
@@ -58,8 +72,68 @@ export class PokerCard {
         }
     }
 
+    toString() {
+        return PokerCard.reverseCardMap[this.rank] + this.suit;
+    }
+
     prettyPrint() {
         console.log(PokerCard.reverseCardMap[this.rank] + this.suit);
+    }
+}
+
+export class Deck {
+    constructor(deadCards = []) {
+        this.deck = [];
+        let rankRange = Object.values(PokerCard.cardMap);
+        let minRank = Math.min.apply(null, rankRange);
+        let maxRank = Math.max.apply(null, rankRange);
+        let removedCards = new Set();
+        deadCards.forEach(card => {
+            removedCards.add(card.toString());
+        });
+        for (let rank = minRank; rank < maxRank+1; rank++) {
+            for (let suitIdx = 0; suitIdx < 4; suitIdx++) {
+                let suit = PokerCard.reverseSuitMap[suitIdx];
+                let card = new PokerCard(rank, suit);
+                if (!removedCards.has(card.toString())) {
+                    this.deck.push(card);
+                }
+            }
+        }
+    }
+
+    shuffle() {
+        //console.log("shuffling");
+        // Fisher-Yates shuffle in reverse
+        for (let i = 0; i < this.deck.length; i++) {
+            let idx = getRandomInt(0, this.deck.length);
+            [this.deck[i], this.deck[idx]] = [this.deck[idx], this.deck[i]]
+        }
+    }
+
+    drawCardWithReplacement() {
+        return this.deck[this.deck.length-1];
+    }
+
+    drawCardWithoutReplacement() {
+        return this.deck.pop();
+    }
+
+    pickRandomCardWithReplacement() {
+        let idx = getRandomInt(0, this.deck.length);
+        return this.deck[idx];
+    }
+
+    pickRandomCardWithoutReplacement() {
+        let idx = getRandomInt(0, this.deck.length);
+        let ret = this.deck[idx];
+        this.deck = this.deck.slice(0, idx).concat(this.deck.slice(idx+1));
+        return ret;
+    }
+
+    prettyPrint() {
+        console.log("------------ Printing deck ------------");
+        this.deck.forEach(card => card.prettyPrint());
     }
 }
 
@@ -108,6 +182,7 @@ export class HandRank {
           9: "straight-flush" ,
     }
 
+    // compare returns >0 if this wins, 0 for a chop and <0 if other hand wins.
     compare(otherHand) {
         if (this.category != otherHand.category) {
             return this.category - otherHand.category;
@@ -125,7 +200,7 @@ export class HandRank {
     }
 
     prettyPrint() {
-        console.log(HandRank.reverseCategory[this.category]);
+        console.log(HandRank.reverseCategory[this.category], [this.kicker].concat(this.extraKickers));
     }
 }
 
@@ -171,7 +246,7 @@ export function fullHouseCheck(combo) {
         if (combo[3].rank != combo[4].rank) {
             return new HandRank(0, 0);
         }
-        tripRank = combo[0].rank;
+        tripsRank = combo[0].rank;
         pairRank = combo[3].rank;
     } else { // the last 3 cards must form the trips
         if (!(combo[2].rank == combo[3].rank && combo[3].rank == combo[4].rank)) {
@@ -180,10 +255,10 @@ export function fullHouseCheck(combo) {
         if (combo[0].rank != combo[1].rank) {
             return new HandRank(0, 0);
         }
-        tripRank = combo[2].rank;
+        tripsRank = combo[2].rank;
         pairRank = combo[0].rank;
     }
-    return new HandRank(HandRank.category["full-house"], tripRank, [pairRank]);
+    return new HandRank(HandRank.category["full-house"], tripsRank, [pairRank]);
 }
 
 export function flushCheck(combo) {
@@ -319,13 +394,17 @@ export function determineHandRank(boardCombos) {
 }
 
 // evaluateOutcome takes in two hands and a board and returns the winner of the hand.
-// Returns 1 if h1 wins, 0 for a chop and -1 if h2 wins.
+// Returns >0 if h1 wins, 0 for a chop and <0 if h2 wins.
 export function evaluateOutcome(h1, h2, board) {
+    return evaluateOutcomeReturnFinalHands(h1, h2, board)[0];
+}
+
+function evaluateOutcomeReturnFinalHands(h1, h2, board) {
     let c1 = generateCombinations(h1, board);
     let r1 = determineHandRank(c1);
     let c2 = generateCombinations(h2, board);
     let r2 = determineHandRank(c2);
-    return r1[0].compare(r2[0]);
+    return [r1[0].compare(r2[0]), r1, r2];
 }
 
 // getRandomInt returns a number within [min, max)
@@ -336,9 +415,40 @@ function getRandomInt(min, max) {
 }
 
 // TODO: be able to make this go on in an inf loop and take a stop command
-function calcValorVsHand(hand, vHand, board) {
-    for (let i = 0; i< 1000000
-    getRandomInt();
+export function calcValorVsHand(hand, vHand, board) {
+    let excludedCards = [hand, vHand, board].flat();
+    console.log(excludedCards);
+    let p1 = 0;
+    let p2 = 0;
+    let numTrials = 500000;
+    for (let i = 0; i < numTrials; i++) {
+        let deck = new Deck(excludedCards);
+        //deck.prettyPrint();
+        deck.shuffle();
+        //deck.prettyPrint();
+        let turn = deck.pickRandomCardWithoutReplacement();
+        //deck.prettyPrint();
+        let river = deck.pickRandomCardWithoutReplacement();
+        //deck.prettyPrint();
+        //console.log("turn and river");
+        //turn.prettyPrint();
+        //river.prettyPrint();
+        let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board.concat([turn, river]));
+        //console.log("p1", outcome[1][0].prettyPrint());
+        //console.log("p2", outcome[2][0].prettyPrint());
+        if (outcome[0] > 0) {
+            p1 += 1;
+            //console.log("p1 wins");
+        } else if (outcome[0] == 0) {
+            p1 += 0.5;
+            p2 += 0.5;
+            //console.log("chop");
+        } else {
+            p2 += 1;
+            //console.log("p2 wins");
+        }
+    }
+    console.log(p1, p2, numTrials);
 }
 
 function calcValorVsRange(hand, range, board) {
