@@ -353,7 +353,7 @@ export function testCalcValorVsRange() {
     let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
     let range = [
         //[new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")],
-        //[new PokerCard(PokerCard.cardMap["J"], "d"), new PokerCard(PokerCard.cardMap["J"], "c")],
+        [new PokerCard(PokerCard.cardMap["J"], "d"), new PokerCard(PokerCard.cardMap["J"], "c")],
         [new PokerCard(PokerCard.cardMap["A"], "h"), new PokerCard(PokerCard.cardMap["A"], "c")],
     ]
     let board = [
