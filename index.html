@@ -1,15 +1,23 @@
 <!DOCTYPE html>
 <html>
-    <head>
-       <!-- <script src="calc.js">
-            console.log("hello");
-        </script>
-        -->
+    <!--<head>
         <script type="module" src="scripts/test.js"></script>
-    <!--<script type="module" src="scripts/rank5.js">-->
-    </script>
     </head>
+    -->
     <body>
-        test
+        <p> Click the button to caluclate valor of 99 vs AA on 972r no BDFD.</p>
+        <button id="btn">Click me.</button>
+        <br>
+        <textarea id="demo"> </textarea>
+
+        <script type="module">
+            import {testCalcValorVsRange} from './scripts/test.js'
+            function test() {
+                document.getElementById("demo").innerHTML = testCalcValorVsRange();
+                
+            }
+            document.getElementById("btn").addEventListener("click", test);
+        </script>
     </body>
 </html>
+

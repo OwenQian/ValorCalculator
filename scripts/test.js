@@ -349,8 +349,8 @@ function testCalcValorVsHand() {
     console.log(calcValorVsHand(hand, vhand, board));
 }
 
-function testCalcValorVsRange() {
-    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];
+export function testCalcValorVsRange() {
+    let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
     let range = [
         //[new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")],
         //[new PokerCard(PokerCard.cardMap["J"], "d"), new PokerCard(PokerCard.cardMap["J"], "c")],
@@ -359,8 +359,8 @@ function testCalcValorVsRange() {
     let board = [
         new PokerCard(PokerCard.cardMap["2"], "d"),
         new PokerCard(PokerCard.cardMap["7"], "d"),
-        new PokerCard(PokerCard.cardMap["T"], "c")
+        new PokerCard(PokerCard.cardMap["9"], "c")
     ];
-    console.log(calcValorVsRange(hand, range, board));
+    return calcValorVsRange(hand, range, board);
 }
-testCalcValorVsRange();
+//testCalcValorVsRange();
