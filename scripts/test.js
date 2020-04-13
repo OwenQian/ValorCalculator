@@ -1,4 +1,5 @@
-import {Deck, PokerCard, determineHandRank, generateCombinations, calcValorVsHand} from './calc.js';
+import {Deck, PokerCard, calcValorVsHand, calcValorVsRange} from './calc.js';
+import {determineHandRank, generateCombinations} from './naive-hand-eval.js'
 
 export function testDetermineHandRank() {
     // straight flush
@@ -347,4 +348,19 @@ function testCalcValorVsHand() {
     ];
     console.log(calcValorVsHand(hand, vhand, board));
 }
-testCalcValorVsHand();
+
+function testCalcValorVsRange() {
+    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];
+    let range = [
+        //[new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")],
+        //[new PokerCard(PokerCard.cardMap["J"], "d"), new PokerCard(PokerCard.cardMap["J"], "c")],
+        [new PokerCard(PokerCard.cardMap["A"], "h"), new PokerCard(PokerCard.cardMap["A"], "c")],
+    ]
+    let board = [
+        new PokerCard(PokerCard.cardMap["2"], "d"),
+        new PokerCard(PokerCard.cardMap["7"], "d"),
+        new PokerCard(PokerCard.cardMap["T"], "c")
+    ];
+    console.log(calcValorVsRange(hand, range, board));
+}
+testCalcValorVsRange();
