@@ -140,8 +140,6 @@ export class RangeUI {
             let j = indexes[1];
             if (this.pressed[0] === i && this.pressed[1] === j)
                 return;
-            this.pressed[0] = i;
-            this.pressed[1] = j;
             this.selectHand(i, j);
         }
     }
@@ -149,6 +147,8 @@ export class RangeUI {
     selectHand(i, j) {
         if (i < 0 || j < 0 || i > 12 || j > 12)
             return;
+        this.pressed[0] = i;
+        this.pressed[1] = j;
         if (this.selected[i][j] > 0)
             this.selected[i][j] = 0;
         else
