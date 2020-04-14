@@ -38,8 +38,8 @@
             document.getElementById("btn").addEventListener("click", test);
 
             let canvas = document.getElementById("rangeCanvas");
-            let rangeUI = new RangeUI(canvas);
-            rangeUI.drawGrid();
+            let rangeTextBox = document.getElementById("vrange");
+            let rangeUI = new RangeUI(canvas, rangeTextBox);
         </script>
     </body>
 </html>
