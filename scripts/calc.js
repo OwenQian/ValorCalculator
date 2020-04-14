@@ -85,6 +85,15 @@ export class PokerCard {
     prettyPrint() {
         console.log(PokerCard.reverseCardMap[this.rank] + this.suit);
     }
+
+    static parseString(s) {
+        let handStrs = s.split(" ").map(x => x.trim()).filter(x => x.length > 0);
+        let hands = [];
+        for (let handStr of handStrs) {
+            hands.push(new PokerCard(handStr[0], handStr[1]));
+        }
+        return hands;
+    }
 }
 
 export class Deck {

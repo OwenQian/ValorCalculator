@@ -5,35 +5,40 @@
     </head>
     -->
     <body>
-        <p> Enter villain's range.</p>
         <label>Villain Range</label><br>
         <canvas id="rangeCanvas" tabindex="1">
             Your browser does not support the canvas element.
         </canvas>
 
         <p>Syntax: Comma separated hands, with all hands explicitly specified. E.g., for QQ+ you need to do QQ, KK, AA<br>pair: TT <br> suited: 76s <br> unsuited: AKo. </p>
-        <input id="vrange" type="text" value="TT, 76s, 76o"><br>
+        <input id="vrange" type="text" value=""><br>
 
-        <p>Our Hand: 9d 9h</p>
-        <p>Board: 9c 7d 2h</p>
+        <p>Our Hand: Specify each card with the exact suit, space separated.</p>
+        <input id="hand" type="text" value="9d 9h"><br>
+        <p>Flop</p>
+        <input id="flop" type="text" value="9c 7d 2h"><br>
         <button id="btn">Calculate</button>
         <br>
-        <p id="demo"> Valor: </p>
+        <p id="result"> Valor: </p>
 
         <script type="module">
             import {PokerCard, Range, calcValorVsRange, testCalcValorVsRange} from './scripts/calc.js'
             import {RangeUI} from './scripts/range-ui.js'
             function test() {
                 let vRangeStr = document.getElementById("vrange").value;
-                let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
-                let flop = [
-                    new PokerCard(PokerCard.cardMap["2"], "h"),
-                    new PokerCard(PokerCard.cardMap["7"], "d"),
-                    new PokerCard(PokerCard.cardMap["9"], "c")
-                ];
+                let handStr = document.getElementById("hand").value;
+                let flopStr = document.getElementById("flop").value;
+                //let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
+                //let flop = [
+                //    new PokerCard(PokerCard.cardMap["2"], "h"),
+                //    new PokerCard(PokerCard.cardMap["7"], "d"),
+                //    new PokerCard(PokerCard.cardMap["9"], "c")
+                //];
                 let vRange = Range.parseRange(vRangeStr);
+                let hand = PokerCard.parseString(handStr);
+                let flop = PokerCard.parseString(flopStr);
                 let result = calcValorVsRange(hand, vRange, flop);
-                document.getElementById("demo").innerHTML = "Valor: " + result;
+                document.getElementById("result").innerHTML = "Valor: " + result;
             }
             document.getElementById("btn").addEventListener("click", test);
 
