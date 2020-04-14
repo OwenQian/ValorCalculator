@@ -5,16 +5,30 @@
     </head>
     -->
     <body>
-        <p> Click the button to caluclate valor of 9d 9h vs {Ah Ac, Jd Jc} on 9c 7d 2d.</p>
-        <button id="btn">Click me.</button>
+        <p> Enter villain's range.</p>
+        <label>Villain Range</label><br>
+        <p>Syntax: Comma separated hands, with all hands explicitly specified. E.g., for QQ+ you need to do QQ, KK, AA<br>pair: TT <br> suited: 76s <br> unsuited: AKo. </p>
+        <input id="vrange" type="text" value="TT, 76s, 76o"><br>
+
+        <p>Our Hand: 9d 9h</p>
+        <p>Board: 9c 7d 2h</p>
+        <button id="btn">Calculate</button>
         <br>
-        <textarea id="demo"> </textarea>
+        <p id="demo"> Valor: </p>
 
         <script type="module">
-            import {testCalcValorVsRange} from './scripts/calc.js'
+            import {PokerCard, Range, calcValorVsRange, testCalcValorVsRange} from './scripts/calc.js'
             function test() {
-                document.getElementById("demo").innerHTML = testCalcValorVsRange();
-                
+                let vRangeStr = document.getElementById("vrange").value;
+                let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
+                let flop = [
+                    new PokerCard(PokerCard.cardMap["2"], "h"),
+                    new PokerCard(PokerCard.cardMap["7"], "d"),
+                    new PokerCard(PokerCard.cardMap["9"], "c")
+                ];
+                let vRange = Range.parseRange(vRangeStr);
+                let result = calcValorVsRange(hand, vRange, flop);
+                document.getElementById("demo").innerHTML = "Valor: " + result;
             }
             document.getElementById("btn").addEventListener("click", test);
         </script>

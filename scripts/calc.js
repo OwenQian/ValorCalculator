@@ -2,7 +2,11 @@ import {evaluateCards} from './phe.js'
 
 export class PokerCard {
     constructor(rank, suit) {
-        this.rank = rank;
+        if (typeof rank === "string") {
+            this.rank = PokerCard.cardMap[rank];
+        } else {
+            this.rank = rank;
+        }
         this.suit = suit;
     }
     static sortDescending(c1, c2) {
@@ -25,20 +29,6 @@ export class PokerCard {
         "2": 2,
     }
 
-    static suitMap = {
-        'd': 0,
-        'c': 1,
-        's': 2,
-        'h': 3
-    }
-
-    static reverseSuitMap = {
-        0:'d',
-        1:'c',
-        2:'s',
-        3:'h'
-    }
-
     static reverseCardMap = {
         14: "A",
         13: "K",
@@ -53,6 +43,20 @@ export class PokerCard {
         4:  "4",
         3:  "3",
         2:  "2",
+    }
+
+    static suitMap = {
+        'd': 0,
+        'c': 1,
+        's': 2,
+        'h': 3
+    }
+
+    static reverseSuitMap = {
+        0:'d',
+        1:'c',
+        2:'s',
+        3:'h'
     }
 
     higherCard() {
@@ -138,18 +142,87 @@ export class Deck {
     }
 }
 
-export class PokerHand {
-    constructor(c1, c2) {
-        this.cards = [c1, c2];
+export class Range {
+    constructor() {
+        this.hands = [];
+    }
+
+    static expandPair(handStr) {
+        let rankStr = handStr[0];
+        let hands = [];
+        for (let i = 0; i < 4; i++) {
+            for (let j = i+1; j < 4; j++) {
+                let suit1 = PokerCard.reverseSuitMap[i];
+                let suit2 = PokerCard.reverseSuitMap[j];
+                let card1 = rankStr + suit1;
+                let card2 = rankStr + suit2;
+                hands.push([new PokerCard(rankStr, suit1), new PokerCard(rankStr, suit2)]);
+            }
+        }
+        return hands;
+    }
+
+    static expandSuited(handStr) {
+        let rank1 = handStr[0];
+        let rank2 = handStr[1];
+        let hands = [];
+        for (let i = 0; i < 4; i++) {
+            let suit = PokerCard.reverseSuitMap[i];
+            hands.push([new PokerCard(rank1, suit), new PokerCard(rank2, suit)]);
+        }
+        return hands;
+    }
+
+    static expandUnsuited(handStr) {
+        let rank1 = handStr[0];
+        let rank2 = handStr[1];
+        let hands = [];
+        for (let i = 0; i < 4; i++) {
+            for (let j = 0; j < 4; j++) {
+                if (i == j) {
+                    continue;
+                }
+                let suit1 = PokerCard.reverseSuitMap[i];
+                let suit2 = PokerCard.reverseSuitMap[j];
+                hands.push([new PokerCard(rank1, suit1), new PokerCard(rank2, suit2)]);
+            }
+        }
+        return hands;
+    }
+
+    parsePairs() {
+        let highPair;
+        let lowPair;
+        let high = PokerCard.cardMap[highPair];
+        let low = PokerCard.cardMap[lowPair];
+        for (let rank = low; rank < high+1; rank++) {
+            expandPair(PokerCard.reverseCardMap[rank]);
+        }
+    }
+
+    static parseRange(rangeStr) {
+        let handStrs = rangeStr.split(",").map(x => x.trim());
+        let hands = [];
+        for (let handStr of handStrs) {
+            if (handStr[0] == handStr[1]) {
+                let pairs = Range.expandPair(handStr);
+                hands = hands.concat(pairs);
+            } else if (handStr[2] == "s") {
+                let suited = Range.expandSuited(handStr);
+                hands = hands.concat(suited);
+            } else {
+                let unsuited = Range.expandUnsuited(handStr);
+                hands = hands.concat(unsuited);
+            }
+        }
+        return hands;
     }
 }
 
-export class Range {
-    constructor() {
-        // Range is an array of PokerHands
-        this.hands = [];
-    }
-}
+//console.log(Range.expandPair("TT"));
+//console.log(Range.expandSuited("76s"));
+//console.log(Range.expandUnsuited("76o"));
+//console.log(Range.parseRange("TT, 76s, 76o"));
 
 export class HandRank {
     constructor(category, kicker, extraKickers=[]) {
@@ -229,49 +302,6 @@ function getRandomInt(min, max) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
-}
-
-// TODO: be able to make this go on in an inf loop and take a stop command
-export function calcValorVsHand(hand, vHand, board) {
-    let excludedCards = [hand, vHand, board].flat();
-    console.log(excludedCards);
-    let p1 = 0;
-    let p2 = 0;
-    let numTrials = 1000000;
-    for (let i = 0; i < numTrials; i++) {
-        let deck = new Deck(excludedCards);
-        deck.shuffle();
-        let turn = deck.pickRandomCardWithoutReplacement();
-        let river = deck.pickRandomCardWithoutReplacement();
-        let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board.concat([turn, river]));
-        if (outcome[0] > 0) {
-            p1 += 1;
-        } else if (outcome[0] == 0) {
-            p1 += 0.5;
-            p2 += 0.5;
-        } else {
-            p2 += 1;
-        }
-    }
-    console.log(p1, p2, numTrials);
-}
-
-function calcEquityVsRangeGivenRunout(hand, range, flop, runout) {
-    let p1 = 0;
-    let p2 = 0;
-    range.forEach((vHand) => {
-        let board = [flop, runout].flat();
-        let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
-        if (outcome[0] > 0) {
-            p1 += 1;
-        } else if (outcome[0] == 0) {
-            p1 += 0.5;
-            p2 += 0.5;
-        } else {
-            p2 += 1;
-        }
-    });
-    return p1/range.length;
 }
 
 // TODO: account for range blocker effects and calculate a more accurate runout
