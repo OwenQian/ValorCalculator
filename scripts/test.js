@@ -337,30 +337,16 @@ function testDrawCard() {
         console.log(k, "appeared", tally[k]/numTrials);
     });
 }
+//
+//function testCalcValorVsHand() {
+//    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];
+//    let vhand = [new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")];
+//    let board = [
+//        new PokerCard(PokerCard.cardMap["2"], "d"),
+//        new PokerCard(PokerCard.cardMap["7"], "d"),
+//        new PokerCard(PokerCard.cardMap["T"], "c")
+//    ];
+//    console.log(calcValorVsHand(hand, vhand, board));
+//}
 
-function testCalcValorVsHand() {
-    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];
-    let vhand = [new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")];
-    let board = [
-        new PokerCard(PokerCard.cardMap["2"], "d"),
-        new PokerCard(PokerCard.cardMap["7"], "d"),
-        new PokerCard(PokerCard.cardMap["T"], "c")
-    ];
-    console.log(calcValorVsHand(hand, vhand, board));
-}
-
-export function testCalcValorVsRange() {
-    let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
-    let range = [
-        //[new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")],
-        [new PokerCard(PokerCard.cardMap["J"], "d"), new PokerCard(PokerCard.cardMap["J"], "c")],
-        [new PokerCard(PokerCard.cardMap["A"], "h"), new PokerCard(PokerCard.cardMap["A"], "c")],
-    ]
-    let board = [
-        new PokerCard(PokerCard.cardMap["2"], "d"),
-        new PokerCard(PokerCard.cardMap["7"], "d"),
-        new PokerCard(PokerCard.cardMap["9"], "c")
-    ];
-    return calcValorVsRange(hand, range, board);
-}
 //testCalcValorVsRange();

@@ -105,7 +105,6 @@ export class Deck {
     }
 
     shuffle() {
-        //console.log("shuffling");
         // Fisher-Yates shuffle in reverse
         for (let i = 0; i < this.deck.length; i++) {
             let idx = getRandomInt(0, this.deck.length);
@@ -275,34 +274,85 @@ function calcEquityVsRangeGivenRunout(hand, range, flop, runout) {
     return p1/range.length;
 }
 
+// TODO: account for range blocker effects and calculate a more accurate runout
+// probability distribution. Currently this is assuming a uniform distribution.
 export function calcValorVsRange(hand, range, flop) {
     let valorSum = 0;
-    range.forEach((vHand) => {
-        let p1 = 0;
-        let p2 = 0;
-        let excludedCards = [hand, vHand, flop].flat();
-        let runoutSequence = [];
-        let deck = new Deck(excludedCards);
-        let cnt = 0;
-        for (let i = 0; i < deck.deck.length; i++) {
-            for (let j = i+1; j < deck.deck.length; j++) {
-                runoutSequence.push([deck.deck[i], deck.deck[j]]);
-            }
+    let runoutSequence = [];
+    let excludedCards = [hand, flop].flat();
+    let deck = new Deck(excludedCards);
+    for (let i = 0; i < deck.deck.length; i++) {
+        for (let j = i+1; j < deck.deck.length; j++) {
+            runoutSequence.push([deck.deck[i], deck.deck[j]]);
         }
-        runoutSequence.forEach((runout) => {
+    }
+    let numRunoutsCounted = 0;
+    // TODO: calculating the probability distribution when given a wide range
+    // might be expensive, but when the range is wide, the blocker effects are
+    // less impactful. Perhaps a heuristic to only calculate the dist if the
+    // width of the range is under 100. Or more precisely if the relative frequency
+    // of a card in the range is < 10%.
+    for (let runout of runoutSequence) {
+        let runoutCounted = false;
+        let numP1Wins = 0;
+        let cnt = 0;
+        let numVHandsSkipped = 0;
+        let numVHandsProcessed = 0;
+        rangeLoop:
+        for (let vHand of range) {
+            // check for card removal and skip hand if it's been blocked
+            for (let c of runout) {
+                if (vHand[0].toString() == c.toString() || vHand[1].toString() == c.toString()) {
+                    numVHandsSkipped += 1;
+                    continue rangeLoop;
+                }
+            }
+            runoutCounted = true;
+            numVHandsProcessed += 1;
             let board = [flop, runout].flat();
             let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
             if (outcome[0] > 0) {
-                p1 += 1;
+                numP1Wins += 1;
             } else if (outcome[0] == 0) {
-                p1 += 0.5;
-                p2 += 0.5;
+                numP1Wins += 0.5;
             } else {
-                p2 += 1;
             }
-        });
-        let equityVsVHand = p1/runoutSequence.length;
-        valorSum += Math.pow(equityVsVHand, 2);
-    });
-    return valorSum/range.length;
+        }
+
+        if (runoutCounted) {
+            numRunoutsCounted += 1;
+        }
+        //console.log("---------------------");
+        //console.log("runout", runout);
+        //console.log("p1", numP1Wins);
+        //console.log("num skipped", numVHandsSkipped);
+        //console.log("num processed", numVHandsProcessed);
+        if (numVHandsProcessed == 0) {
+            continue;
+        }
+        let equityVsRangeOnRunout = numP1Wins/numVHandsProcessed;
+        //console.log("equity", equityVsRangeOnRunout);
+        valorSum += Math.pow(equityVsRangeOnRunout, 2);
+    }
+    //console.log("=====================");
+    //console.log("valorSum", valorSum);
+    //console.log("num runouts", runoutSequence.length);
+    //console.log("numRunoutsCounted", numRunoutsCounted);
+    return valorSum/numRunoutsCounted;
+}
+
+export function testCalcValorVsRange() {
+    let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
+    let range = [
+        //[new PokerCard(PokerCard.cardMap["Q"], "d"), new PokerCard(PokerCard.cardMap["Q"], "c")],
+        //[new PokerCard(PokerCard.cardMap["2"], "c"), new PokerCard(PokerCard.cardMap["2"], "h")],
+        [new PokerCard(PokerCard.cardMap["A"], "s"), new PokerCard(PokerCard.cardMap["K"], "c")],
+        [new PokerCard(PokerCard.cardMap["A"], "h"), new PokerCard(PokerCard.cardMap["K"], "c")],
+    ]
+    let board = [
+        new PokerCard(PokerCard.cardMap["2"], "d"),
+        new PokerCard(PokerCard.cardMap["7"], "d"),
+        new PokerCard(PokerCard.cardMap["9"], "c")
+    ];
+    return calcValorVsRange(hand, range, board);
 }
