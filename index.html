@@ -7,6 +7,10 @@
     <body>
         <p> Enter villain's range.</p>
         <label>Villain Range</label><br>
+        <canvas id="rangeCanvas" tabindex="1">
+            Your browser does not support the canvas element.
+        </canvas>
+
         <p>Syntax: Comma separated hands, with all hands explicitly specified. E.g., for QQ+ you need to do QQ, KK, AA<br>pair: TT <br> suited: 76s <br> unsuited: AKo. </p>
         <input id="vrange" type="text" value="TT, 76s, 76o"><br>
 
@@ -18,6 +22,7 @@
 
         <script type="module">
             import {PokerCard, Range, calcValorVsRange, testCalcValorVsRange} from './scripts/calc.js'
+            import {RangeUI} from './scripts/range-ui.js'
             function test() {
                 let vRangeStr = document.getElementById("vrange").value;
                 let hand = [new PokerCard(PokerCard.cardMap["9"], "d"), new PokerCard(PokerCard.cardMap["9"], "h")];
@@ -31,6 +36,10 @@
                 document.getElementById("demo").innerHTML = "Valor: " + result;
             }
             document.getElementById("btn").addEventListener("click", test);
+
+            let canvas = document.getElementById("rangeCanvas");
+            let rangeTextBox = document.getElementById("vrange");
+            let rangeUI = new RangeUI(canvas, rangeTextBox);
         </script>
     </body>
 </html>
