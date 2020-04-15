@@ -89,11 +89,13 @@ export class RangeUI {
                 continue;
             let i = cards.indexOf(hand[0]);
             let j = cards.indexOf(hand[1]);
+          
             if (j < i) {
                 let temp = i;
                 i = j;
                 j = temp;
             }
+
 
             if (i === -1 || j === -1)
                 continue;
@@ -130,6 +132,7 @@ export class RangeUI {
         let rect = this.canvas.getBoundingClientRect();
         let canvasX = mouseX - rect.left;
         let canvasY = mouseY - rect.top;
+
         let i = Math.floor((canvasX - 1) / (this.boxWidth + 1));
         let j = Math.floor((canvasY - 1) / (this.boxHeight + 1));
         return [i, j];

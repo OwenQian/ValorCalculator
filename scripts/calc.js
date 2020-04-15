@@ -85,6 +85,15 @@ export class PokerCard {
     prettyPrint() {
         console.log(PokerCard.reverseCardMap[this.rank] + this.suit);
     }
+
+    static parseString(s) {
+        let handStrs = s.split(" ").map(x => x.trim()).filter(x => x.length > 0);
+        let hands = [];
+        for (let handStr of handStrs) {
+            hands.push(new PokerCard(handStr[0], handStr[1]));
+        }
+        return hands;
+    }
 }
 
 export class Deck {
@@ -201,7 +210,7 @@ export class Range {
     }
 
     static parseRange(rangeStr) {
-        let handStrs = rangeStr.split(",").map(x => x.trim());
+        let handStrs = rangeStr.split(",").map(x => x.trim()).filter(x => x.length > 0);
         let hands = [];
         for (let handStr of handStrs) {
             if (handStr[0] == handStr[1]) {
@@ -304,9 +313,19 @@ function getRandomInt(min, max) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
+function filterBlockedHands(vHand, removedCards) {
+    for (let c of removedCards) {
+        if (vHand[0].toString() == c.toString() || vHand[1].toString() == c.toString()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // TODO: account for range blocker effects and calculate a more accurate runout
 // probability distribution. Currently this is assuming a uniform distribution.
 export function calcValorVsRange(hand, range, flop) {
+    range = range.filter(hand => filterBlockedHands(hand, flop));
     let valorSum = 0;
     let runoutSequence = [];
     let excludedCards = [hand, flop].flat();
@@ -329,14 +348,7 @@ export function calcValorVsRange(hand, range, flop) {
         let numVHandsSkipped = 0;
         let numVHandsProcessed = 0;
         rangeLoop:
-        for (let vHand of range) {
-            // check for card removal and skip hand if it's been blocked
-            for (let c of runout) {
-                if (vHand[0].toString() == c.toString() || vHand[1].toString() == c.toString()) {
-                    numVHandsSkipped += 1;
-                    continue rangeLoop;
-                }
-            }
+        for (let vHand of range.filter(hand => filterBlockedHands(hand, runout))) {
             runoutCounted = true;
             numVHandsProcessed += 1;
             let board = [flop, runout].flat();
