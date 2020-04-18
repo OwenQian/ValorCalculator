@@ -337,6 +337,72 @@ function testDrawCard() {
         console.log(k, "appeared", tally[k]/numTrials);
     });
 }
+
+export function calcEquityVsRange2(hand, range, flop) {
+    console.log("equity2");
+    range = range.filter(hand => filterBlockedHands(hand, flop));
+    let valorSum = 0;
+
+    let numSims = 0;
+    let numP1Wins = 0;
+    for (let vHand of range) {
+        let runoutSequence = [];
+        let excludedCards = [hand, flop, vHand].flat();
+        let deck = new Deck(excludedCards);
+        for (let i = 0; i < deck.deck.length; i++) {
+            for (let j = i+1; j < deck.deck.length; j++) {
+                runoutSequence.push([deck.deck[i], deck.deck[j]]);
+            }
+        }
+        for (let runout of runoutSequence) {
+            numSims += 1;
+            let board = [flop, runout].flat();
+            let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
+            if (outcome[0] > 0) {
+                numP1Wins += 1;
+            } else if (outcome[0] == 0) {
+                numP1Wins += 0.5;
+            }
+        }
+    }
+    return numP1Wins/numSims;
+}
+
+export function calcEquityVsRange3(hand, range, flop) {
+    console.log("equity3");
+    console.log("before filter", range);
+    range = range.filter(h => filterBlockedHands(h, [hand, flop].flat()));
+    console.log("after filter", range);
+
+    let excludedCards = [hand, flop].flat();
+    let numSims = 0;
+    let numP1Wins = 0;
+    let runoutSequence = [];
+    let deck = new Deck(excludedCards);
+    for (let i = 0; i < deck.deck.length; i++) {
+        for (let j = i+1; j < deck.deck.length; j++) {
+            runoutSequence.push([deck.deck[i], deck.deck[j]]);
+        }
+    }
+    for (let runout of runoutSequence) {
+        let runoutRange = range.filter(hand => filterBlockedHands(hand, runout));
+        if (runoutRange.length == 0) {
+            continue;
+        }
+        let board = [flop, runout].flat();
+        for (let vHand of runoutRange) {
+            numSims += 1;
+            let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
+            if (outcome[0] > 0) {
+                numP1Wins += 1;
+            } else if (outcome[0] == 0) {
+                numP1Wins += 0.5;
+            }
+        }
+    }
+    return numP1Wins/numSims;
+}
+
 //
 //function testCalcValorVsHand() {
 //    let hand = [new PokerCard(PokerCard.cardMap["A"], "d"), new PokerCard(PokerCard.cardMap["K"], "d")];

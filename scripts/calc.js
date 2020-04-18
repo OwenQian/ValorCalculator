@@ -149,6 +149,16 @@ export class Deck {
         console.log("------------ Printing deck ------------");
         this.deck.forEach(card => card.prettyPrint());
     }
+
+    generateRunoutSequence() {
+        let runoutSequence = [];
+        for (let i = 0; i < this.deck.length; i++) {
+            for (let j = i+1; j < this.deck.length; j++) {
+                runoutSequence.push([this.deck[i], this.deck[j]]);
+            }
+        }
+        return runoutSequence;
+    }
 }
 
 export class Range {
@@ -322,64 +332,49 @@ function filterBlockedHands(vHand, removedCards) {
     return true;
 }
 
-// TODO: account for range blocker effects and calculate a more accurate runout
-// probability distribution. Currently this is assuming a uniform distribution.
+export function calcEquityVsRange(hand, range, flop) {
+    return calcAverageRunoutHandStrength(hand, range, flop, (x) => x);
+}
+
 export function calcValorVsRange(hand, range, flop) {
-    range = range.filter(hand => filterBlockedHands(hand, flop));
+    return Math.sqrt(calcAverageRunoutHandStrength(hand, range, flop, (x) => Math.pow(x, 2)));
+}
+
+// calcAverageRunoutHandStrength iterates over all 1081 possible turn+river runouts
+// then calculates the percentile of our hand vs range on that runout. Finally the
+// riverAggregateFunc is applied. The identity function will result in an equity
+// calculation and the square function will result in a valor calculation.
+// See calcValorVsRange and calcEquityVsRange for more details.
+function calcAverageRunoutHandStrength(hand, range, flop, riverPercentileFunc) {
+    range = range.filter(h => filterBlockedHands(h, [flop, hand].flat()));
     let valorSum = 0;
-    let runoutSequence = [];
     let excludedCards = [hand, flop].flat();
     let deck = new Deck(excludedCards);
-    for (let i = 0; i < deck.deck.length; i++) {
-        for (let j = i+1; j < deck.deck.length; j++) {
-            runoutSequence.push([deck.deck[i], deck.deck[j]]);
-        }
-    }
+    let runoutSequence = deck.generateRunoutSequence();
     let numRunoutsCounted = 0;
-    // TODO: calculating the probability distribution when given a wide range
-    // might be expensive, but when the range is wide, the blocker effects are
-    // less impactful. Perhaps a heuristic to only calculate the dist if the
-    // width of the range is under 100. Or more precisely if the relative frequency
-    // of a card in the range is < 10%.
     for (let runout of runoutSequence) {
-        let runoutCounted = false;
+        let runoutRange = range.filter(hand => filterBlockedHands(hand, runout));
+        // skip runout if the range is empty
+        if (runoutRange.length == 0) {
+            continue;
+        }
+        let runoutWeight = runoutRange.length/range.length;
+        numRunoutsCounted += runoutWeight;
+
+        let board = [flop, runout].flat();
         let numP1Wins = 0;
-        let cnt = 0;
-        let numVHandsSkipped = 0;
-        let numVHandsProcessed = 0;
-        rangeLoop:
-        for (let vHand of range.filter(hand => filterBlockedHands(hand, runout))) {
-            runoutCounted = true;
-            numVHandsProcessed += 1;
-            let board = [flop, runout].flat();
+        for (let vHand of runoutRange) {
             let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
             if (outcome[0] > 0) {
                 numP1Wins += 1;
             } else if (outcome[0] == 0) {
                 numP1Wins += 0.5;
-            } else {
             }
         }
 
-        if (runoutCounted) {
-            numRunoutsCounted += 1;
-        }
-        //console.log("---------------------");
-        //console.log("runout", runout);
-        //console.log("p1", numP1Wins);
-        //console.log("num skipped", numVHandsSkipped);
-        //console.log("num processed", numVHandsProcessed);
-        if (numVHandsProcessed == 0) {
-            continue;
-        }
-        let equityVsRangeOnRunout = numP1Wins/numVHandsProcessed;
-        //console.log("equity", equityVsRangeOnRunout);
-        valorSum += Math.pow(equityVsRangeOnRunout, 2);
+        let equityVsRangeOnRunout = numP1Wins/runoutRange.length;
+        valorSum += riverPercentileFunc(equityVsRangeOnRunout)*runoutWeight;
     }
-    //console.log("=====================");
-    //console.log("valorSum", valorSum);
-    //console.log("num runouts", runoutSequence.length);
-    //console.log("numRunoutsCounted", numRunoutsCounted);
     return valorSum/numRunoutsCounted;
 }
 
