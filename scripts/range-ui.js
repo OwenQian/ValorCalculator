@@ -1,5 +1,7 @@
 const cards = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
+import {Range} from './calc.js'
+
 export class RangeUI {
     constructor(canvas, textBox, boxHeight = 40, boxWidth = 40) {
         this.selected =
@@ -82,8 +84,9 @@ export class RangeUI {
     }
 
     updateRange(rangeString) {
+        let expandedRangeStr = Range.parseRange(rangeString)[1];
         this.clearRange();
-        let hands = rangeString.split(",").map(x => x.trim());
+        let hands = expandedRangeStr.split(",").map(x => x.trim());
         for (let hand of hands) {
             if (hand.length < 2 || hand.length > 3)
                 continue;
@@ -122,7 +125,9 @@ export class RangeUI {
                 let hand = i > j ? cards[j] + cards[i] + 's' : i < j ? cards [i] + cards[j] + 'o' : cards[i] + cards[j];
                 let hands = this.textBox.value.split(",").map(x => x.trim());
                 if (!hands.includes(hand)) {
-                    this.textBox.value += hand + ', ';
+                    this.textBox.value += ', ' + hand;
+                    // Remove leading and trailing commas
+                    this.textBox.value = this.textBox.value.replace(/(^, )|(, $)/g, "");
                 }
             }
         }

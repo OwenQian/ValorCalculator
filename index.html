@@ -5,13 +5,21 @@
     </head>
     -->
     <body>
-        <label>Villain Range</label><br>
         <canvas id="rangeCanvas" tabindex="1">
             Your browser does not support the canvas element.
         </canvas>
-
-        <p>Syntax: Comma separated hands, with all hands explicitly specified. E.g., for QQ+ you need to do QQ, KK, AA<br>pair: TT <br> suited: 76s <br> unsuited: AKo. </p>
+        <br>
+        <label>Villain Range</label><br>
         <input id="vrange" type="text" value=""><br>
+
+        <p>
+            <b>Syntax: Comma separate each hand group</b><br>
+            <b>Pair</b>: XX | XX+ | XX-YY (high number first)<br>
+            Examples: TT, TT+, 77-44 <br><br>
+            <b>Suited</b>: XYs | XYs+ | XYs-XZs (high number first)<br>
+            Examples: T6s, K4s+, QJs-Q4s<br><br>
+            <b>Unsuited</b>: Same as suited but replace 's' with 'o'<br>
+        </p>
 
         <p>Our Hand: Specify each card with the exact suit, space separated.</p>
         <input id="hand" type="text" value="Kc Qc"><br>
@@ -29,7 +37,7 @@
                 let vRangeStr = document.getElementById("vrange").value;
                 let handStr = document.getElementById("hand").value;
                 let flopStr = document.getElementById("flop").value;
-                let vRange = Range.parseRange(vRangeStr);
+                let vRange = Range.parseRange(vRangeStr)[0];
                 let hand = PokerCard.parseString(handStr);
                 let flop = PokerCard.parseString(flopStr);
                 let equity = calcEquityVsRange(hand, vRange, flop);
