@@ -150,11 +150,17 @@ export class Deck {
         this.deck.forEach(card => card.prettyPrint());
     }
 
-    generateRunoutSequence() {
+    generateRunoutSequence(board) {
         let runoutSequence = [];
-        for (let i = 0; i < this.deck.length; i++) {
-            for (let j = i+1; j < this.deck.length; j++) {
-                runoutSequence.push([this.deck[i], this.deck[j]]);
+        if (board.length == 3) {
+            for (let i = 0; i < this.deck.length; i++) {
+                for (let j = i+1; j < this.deck.length; j++) {
+                    runoutSequence.push([this.deck[i], this.deck[j]]);
+                }
+            }
+        } else if (board.length == 4) {
+            for (let i = 0; i < this.deck.length; i++) {
+                runoutSequence.push([this.deck[i]]);
             }
         }
         return runoutSequence;
@@ -387,12 +393,12 @@ export function calcValorVsRange(hand, range, flop) {
 // riverAggregateFunc is applied. The identity function will result in an equity
 // calculation and the square function will result in a valor calculation.
 // See calcValorVsRange and calcEquityVsRange for more details.
-function calcAverageRunoutHandStrength(hand, range, flop, riverPercentileFunc) {
-    range = range.filter(h => filterBlockedHands(h, [flop, hand].flat()));
+function calcAverageRunoutHandStrength(hand, range, board, riverPercentileFunc) {
+    range = range.filter(h => filterBlockedHands(h, [board, hand].flat()));
     let valorSum = 0;
-    let excludedCards = [hand, flop].flat();
+    let excludedCards = [hand, board].flat();
     let deck = new Deck(excludedCards);
-    let runoutSequence = deck.generateRunoutSequence();
+    let runoutSequence = deck.generateRunoutSequence(board);
     let numRunoutsCounted = 0;
     for (let runout of runoutSequence) {
         let runoutRange = range.filter(hand => filterBlockedHands(hand, runout));
@@ -403,10 +409,10 @@ function calcAverageRunoutHandStrength(hand, range, flop, riverPercentileFunc) {
         let runoutWeight = runoutRange.length/range.length;
         numRunoutsCounted += runoutWeight;
 
-        let board = [flop, runout].flat();
+        let finalBoard = [board, runout].flat();
         let numP1Wins = 0;
         for (let vHand of runoutRange) {
-            let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, board);
+            let outcome = evaluateOutcomeReturnFinalHands(hand, vHand, finalBoard);
             if (outcome[0] > 0) {
                 numP1Wins += 1;
             } else if (outcome[0] == 0) {
